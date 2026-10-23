@@ -1,0 +1,10 @@
+[package]
+name = "mosaic-plan"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Build MOSAIC workflow plans for .NET hosts"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

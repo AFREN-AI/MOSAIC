@@ -2,7 +2,7 @@
 
 **Model Orchestrated Sandboxed API Interaction Core** is a .NET library for running short, structured workflows over host-registered tools. A model can compose tool calls and pass an earlier result to a later call, while the host retains control of which capabilities are granted.
 
-MOSAIC is an early reference implementation. It is not a general-purpose code sandbox, an MCP server, or a replacement for operating-system isolation. It never evaluates generated C#, JavaScript, Python, shell, or other source code. A plan is data, and the only executable operations are handlers explicitly registered by the host.
+MOSAIC is an early reference implementation. Its v0.1 plan contract is shared by the .NET core and language wrappers. It is not a general-purpose code sandbox, an MCP server, or a replacement for operating-system isolation. It never evaluates generated C#, JavaScript, Python, shell, or other source code. A plan is data, and the only executable operations are handlers explicitly registered by the host.
 
 ## What it does
 
@@ -49,6 +49,18 @@ Plan shape:
 
 The reference object replaces its argument value with the full result of the named earlier step. It does not support expressions, property paths, loops, or dynamic tool creation.
 
+## Language wrappers
+
+The plan contract is stable enough for client libraries that construct and serialize plans. These wrappers share the JSON format and validate basic construction rules such as non-empty identifiers, duplicate steps, selected output, and references to earlier steps:
+
+- TypeScript and JavaScript: [`wrappers/typescript`](wrappers/typescript). The TypeScript package compiles to JavaScript for both module consumers.
+- Python: [`wrappers/python`](wrappers/python).
+- Go: [`wrappers/go`](wrappers/go).
+- C: [`wrappers/c`](wrappers/c), a small C11 plan serializer.
+- Rust: [`wrappers/rust`](wrappers/rust).
+
+These wrappers build plan JSON; they do not invoke the .NET engine or execute tools. An application passes the serialized plan to its trusted .NET host, which owns tool registration, authorization, and execution. The shared plan schema is in [`conformance/plan.schema.json`](conformance/plan.schema.json). Plan contract compatibility is intended to follow semantic versioning from v1.0; until then, wrappers are versioned `0.1.x` alongside this early API.
+
 ## Security model
 
 The model that proposes a plan is untrusted. Tool handlers and capability grants belong to the integrating host. MOSAIC checks registered tool identity and its required capability; a plan cannot grant itself permissions. Unknown tools are denied. Give the executor only the tools and capabilities appropriate for a single task.
@@ -67,10 +79,9 @@ dotnet run --project samples/Mosaic.Demo
 
 ## Roadmap
 
-- Stabilize the .NET API and threat model.
-- Add an optional TypeScript client/wrapper that targets the stable .NET host interface.
-- Explore other language clients only when the host protocol and compatibility requirements are concrete.
+- Validate wrapper conformance across runtimes and publish the first packages.
 - Add handler timeout and resource-budget integration hooks.
+- Consider a separately specified cross-process host protocol if users need remote or subprocess execution.
 
 MOSAIC is a workflow orchestrator, not a drop-in implementation of arbitrary-code Code Mode. It uses a constrained, registered-tool plan to make composition and host-side authorization explicit.
 
