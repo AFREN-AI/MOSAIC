@@ -20,16 +20,14 @@ module MosaicPlan
   def self.require_name(value, label)
     raise ArgumentError, "#{label} cannot be empty" unless value.is_a?(String) && !value.strip.empty?
   end
-  private_class_method :require_name
-
   class WorkflowBuilder
     def initialize
       @steps = []
     end
 
     def add_step(id, tool, arguments)
-      MosaicPlan.send(:require_name, id, "step id")
-      MosaicPlan.send(:require_name, tool, "tool name")
+      MosaicPlan.require_name(id, "step id")
+      MosaicPlan.require_name(tool, "tool name")
       raise ArgumentError, "arguments must be a Hash" unless arguments.is_a?(Hash)
       raise ArgumentError, "duplicate step id: #{id}" if @steps.any? { |step| step[:id] == id }
 
@@ -40,7 +38,7 @@ module MosaicPlan
     end
 
     def to_json(output_step)
-      MosaicPlan.send(:require_name, output_step, "output step")
+      MosaicPlan.require_name(output_step, "output step")
       raise ArgumentError, "workflow needs at least one step" if @steps.empty?
       raise ArgumentError, "output must name a declared step" unless @steps.any? { |step| step[:id] == output_step }
 
