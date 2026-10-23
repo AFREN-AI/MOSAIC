@@ -6,6 +6,7 @@ namespace Mosaic.Core;
 /// <summary>Executes a bounded JSON workflow using only host-registered tools.</summary>
 public sealed class WorkflowExecutor(ToolRegistry registry, WorkflowLimits? limits = null)
 {
+    internal ToolRegistry Registry => registry;
     private readonly WorkflowLimits _limits = limits ?? new WorkflowLimits();
     private static readonly JsonDocumentOptions StrictJsonOptions = new() { AllowTrailingCommas = false, CommentHandling = JsonCommentHandling.Disallow, MaxDepth = 32 };
 

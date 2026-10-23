@@ -22,6 +22,13 @@ public sealed class MosaicProtocolServer
         _hostGrantedCapabilities = new HashSet<Capability>(hostGrantedCapabilities);
     }
 
+    /// <summary>Searches host-registered tools without returning capability names.</summary>
+    public IReadOnlyList<ToolDescriptor> SearchTools(string query, int maximumResults = 20) =>
+        _executor.Registry.Search(query, maximumResults);
+
+    /// <summary>Describes one host-registered tool without returning its capability name.</summary>
+    public ToolDescriptor? DescribeTool(string name) => _executor.Registry.Describe(name);
+
     /// <summary>Validates and handles a single JSON request.</summary>
     public async ValueTask<MosaicProtocolResponse> HandleAsync(
         ReadOnlyMemory<byte> requestJson,

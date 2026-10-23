@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>AfrenAI.Mosaic.Mcp</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>AFREN AI</Authors>
     <Company>AFREN AI</Company>
     <Description>MCP server tool adapter for the MOSAIC bounded workflow engine.</Description>

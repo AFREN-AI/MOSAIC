@@ -1,0 +1,52 @@
+name: Publish NuGet.org packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish (must be unused on NuGet.org)
+        required: true
+        type: string
+      confirm_publication:
+        description: Confirm permanent public publication to NuGet.org
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ inputs.confirm_publication }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore MOSAIC.slnx
+      - run: dotnet build MOSAIC.slnx --configuration Release --no-restore
+      - name: Validate package version
+        env:
+          PACKAGE_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Version must be a semantic version." >&2
+            exit 1
+          fi
+      - name: Pack libraries
+        env:
+          PACKAGE_VERSION: ${{ inputs.version }}
+        run: |
+          dotnet pack src/Mosaic.Core/Mosaic.Core.csproj --configuration Release --no-restore --output artifacts -p:PackageVersion="$PACKAGE_VERSION"
+          dotnet pack src/Mosaic.Mcp/Mosaic.Mcp.csproj --configuration Release --no-restore --output artifacts -p:PackageVersion="$PACKAGE_VERSION"
+      - name: Publish public packages to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [[ -z "$NUGET_API_KEY" ]]; then
+            echo "Configure the NUGET_API_KEY repository secret before publishing." >&2
+            exit 1
+          fi
+          dotnet nuget push artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate

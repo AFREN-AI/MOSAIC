@@ -86,7 +86,36 @@ builder.Services
 
 ## GitHub Packages
 
-The GitHub Actions workflow publishes `AfrenAI.Mosaic` and `AfrenAI.Mosaic.Mcp` to the AFREN-AI GitHub NuGet registry on version tags. CI builds and tests the full `.slnx`, then packs both libraries. Install using the feed URL `https://nuget.pkg.github.com/AFREN-AI/index.json`; GitHub Packages requires authentication for NuGet clients. See [GitHub's NuGet registry guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry) for credential setup.
+The GitHub Actions workflow publishes `AfrenAI.Mosaic` and `AfrenAI.Mosaic.Mcp` to the AFREN-AI GitHub NuGet registry on version tags. CI builds and tests the full `.slnx`, then packs both libraries. Install using the feed URL `https://nuget.pkg.github.com/AFREN-AI/index.json`; GitHub Packages requires a classic personal access token even for public NuGet packages. See [GitHub's NuGet registry guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry) for credential setup.
+
+## NuGet.org distribution
+
+GitHub Packages remains the source of tagged releases. A separate manually dispatched workflow can publish the same libraries to NuGet.org, which permits normal public NuGet restore without GitHub credentials. Before enabling it, configure the repository secret `NUGET_API_KEY`. Then run **Publish NuGet.org packages**, supply an unused semantic version, and explicitly check the public publication confirmation. NuGet.org package IDs and published versions are permanent; the workflow does not run on tags.
+
+## Progressive tool discovery
+
+Add descriptions and JSON Schema input definitions to each `ToolDefinition`. Hosts can call `ToolRegistry.Search(query)` and `ToolRegistry.Describe(name)`, or use the MCP tools `mosaic_search` and `mosaic_describe`. Discovery returns public metadata only; it never includes host capability names or grants. The host still checks capabilities immediately before invocation.
+
+## Durable approvals and replay
+
+`MosaicDurableToolRunner` records a tool request before approval, persists an approval or rejection, and saves completed output for replay. `FileMosaicExecutionStore` stores JSON snapshots in a host-selected directory and is intended for a single host process. Protect that directory as application data: arguments and outputs may contain sensitive information. For multi-process or multi-region hosts, implement `IMosaicExecutionStore` with a transactional shared store. Completed executions replay their stored output. A crash after a side effect but before its result is journaled can cause the handler to run again; durable handlers must honor the execution ID as their idempotency key.
+
+## Generated JavaScript execution
+
+`MosaicCodeExecutor` runs async JavaScript functions in a Linux container pinned by image digest. Build the runner from [`sandbox/Dockerfile`](sandbox/Dockerfile), publish it to a trusted registry, and pass its immutable `repository@sha256:...` reference to `MosaicCodeSandboxOptions`. The host disables network access, uses a read-only filesystem and non-root UID, drops Linux capabilities, and applies process, memory, CPU, message, call-count, and wall-clock limits. Only explicitly selected, host-authorized tools are exposed through the RPC bridge. Every invocation waits for the host approval callback and is journaled with a stable idempotency key, so these tools must use idempotency-aware handlers. The Node `vm` module is not itself the security boundary; container isolation is required. Use a trusted rootless container runtime with its default seccomp/AppArmor or SELinux policy, and do not mount host paths or pass secrets into the image.
+
+```csharp
+var runner = new MosaicDurableToolRunner(registry, new FileMosaicExecutionStore("mosaic-state"));
+var sandbox = new MosaicCodeSandboxOptions("ghcr.io/afren-ai/mosaic-sandbox@sha256:<64-hex-digest>");
+var codeExecutor = new MosaicCodeExecutor(registry, sandbox, runner);
+var output = await codeExecutor.ExecuteAsync(
+    executionId: "request-2026-0001",
+    code: "async (tools) => await tools['catalog.lookup']({ key: 'item-42' })",
+    allowedTools: ["catalog.lookup"],
+    grantedCapabilities: grants,
+    approvalCallback: async (id, toolName, arguments, token) =>
+        await approvalUi.RequestAsync(id, toolName, arguments, token));
+```
 
 ## Language wrappers
 

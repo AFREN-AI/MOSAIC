@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>AfrenAI.Mosaic</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>AFREN AI</Authors>
     <Company>AFREN AI</Company>
     <Description>Bounded tool workflow execution with host-owned capability checks, protocol hosting, and process workers.</Description>
