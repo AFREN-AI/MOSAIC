@@ -1,6 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <PackageId>AfrenAI.Mosaic</PackageId>
+    <Version>0.2.0</Version>
+    <Authors>AFREN AI</Authors>
+    <Company>AFREN AI</Company>
+    <Description>Bounded tool workflow execution with host-owned capability checks, protocol hosting, and process workers.</Description>
+    <PackageTags>agents;workflow;capability-security;mcp;ai</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/AFREN-AI/MOSAIC</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AFREN-AI/MOSAIC</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="src/Mosaic.Core/Mosaic.Core.csproj" />
+  <Project Path="src/Mosaic.Host/Mosaic.Host.csproj" />
+  <Project Path="src/Mosaic.Mcp/Mosaic.Mcp.csproj" />
   <Project Path="samples/Mosaic.Demo/Mosaic.Demo.csproj" />
   <Project Path="tests/Mosaic.Core.Tests/Mosaic.Core.Tests.csproj" />
 </Solution>

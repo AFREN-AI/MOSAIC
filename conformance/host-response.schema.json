@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AFREN-AI/MOSAIC/blob/main/conformance/host-response.schema.json",
+  "title": "MOSAIC host response v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocolVersion", "requestId", "success", "output", "completedCalls", "errorCode", "errorMessage"],
+  "properties": {
+    "protocolVersion": { "const": "1.0" },
+    "requestId": { "type": ["string", "null"] },
+    "success": { "type": "boolean" },
+    "output": {},
+    "completedCalls": { "type": ["integer", "null"], "minimum": 0 },
+    "errorCode": { "type": ["string", "null"] },
+    "errorMessage": { "type": ["string", "null"] }
+  }
+}

@@ -13,14 +13,43 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "tool", "arguments"],
+        "required": ["id"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "tool": { "type": "string", "minLength": 1 },
-          "arguments": { "type": "object", "additionalProperties": true }
-        }
+          "arguments": { "type": "object", "additionalProperties": true },
+          "when": { "oneOf": [{ "type": "boolean" }, { "$ref": "#/$defs/reference" }] },
+          "forEach": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["items", "tool", "arguments"],
+            "properties": {
+              "items": { "$ref": "#/$defs/reference" },
+              "tool": { "type": "string", "minLength": 1 },
+              "arguments": { "type": "object", "additionalProperties": true }
+            }
+          }
+        },
+        "oneOf": [
+          { "required": ["tool", "arguments"], "not": { "required": ["forEach"] } },
+          { "required": ["forEach"], "not": { "anyOf": [{ "required": ["tool"] }, { "required": ["arguments"] }, { "required": ["when"] }] } }
+        ]
       }
     },
     "output": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$ref"],
+      "properties": { "$ref": { "type": "string", "minLength": 1 } }
+    },
+    "itemPlaceholder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$item"],
+      "properties": { "$item": { "const": true } }
+    }
   }
 }

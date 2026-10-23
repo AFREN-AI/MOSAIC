@@ -54,3 +54,41 @@ public sealed class WorkflowExecutorTests
 
     private static WorkflowExecutor Executor() => new(Registry);
 }
+
+public sealed class MosaicProtocolServerTests
+{
+    private static readonly Capability Capability = new("math.read");
+    private static readonly WorkflowExecutor Executor = new(new ToolRegistry(
+    [
+        new ToolDefinition("echo", Capability, (arguments, _) => ValueTask.FromResult(arguments.Clone()))
+    ]));
+
+    [Fact]
+    public async Task HandleAsync_UsesHostOwnedCapabilitiesAndReturnsCanonicalResponse()
+    {
+        const string request = "{\"protocolVersion\":\"1.0\",\"requestId\":\"r-1\",\"method\":\"execute\",\"plan\":{\"steps\":[{\"id\":\"one\",\"tool\":\"echo\",\"arguments\":{\"ok\":true}}],\"output\":\"one\"}}";
+        var server = new MosaicProtocolServer(Executor, [Capability]);
+        var response = await server.HandleAsync(Encoding.UTF8.GetBytes(request));
+        using var json = JsonDocument.Parse(MosaicProtocolServer.SerializeResponse(response));
+        Assert.True(json.RootElement.GetProperty("success").GetBoolean());
+        Assert.Equal("r-1", json.RootElement.GetProperty("requestId").GetString());
+        Assert.True(json.RootElement.GetProperty("output").GetProperty("ok").GetBoolean());
+    }
+
+    [Fact]
+    public async Task HandleAsync_RejectsClientSuppliedPermissions()
+    {
+        const string request = "{\"protocolVersion\":\"1.0\",\"requestId\":\"r-2\",\"method\":\"execute\",\"capabilities\":[\"admin\"],\"plan\":{}}";
+        var response = await new MosaicProtocolServer(Executor, []).HandleAsync(Encoding.UTF8.GetBytes(request));
+        Assert.False(response.Success);
+        Assert.Equal("invalid_request", response.ErrorCode);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RejectsUnsupportedProtocolVersion()
+    {
+        const string request = "{\"protocolVersion\":\"9.0\",\"requestId\":\"r-3\",\"method\":\"execute\",\"plan\":{}}";
+        var response = await new MosaicProtocolServer(Executor, []).HandleAsync(Encoding.UTF8.GetBytes(request));
+        Assert.Equal("unsupported_version", response.ErrorCode);
+    }
+}

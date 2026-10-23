@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AFREN-AI/MOSAIC/blob/main/conformance/host-request.schema.json",
+  "title": "MOSAIC host request v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocolVersion", "requestId", "method", "plan"],
+  "properties": {
+    "protocolVersion": { "const": "1.0" },
+    "requestId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "method": { "const": "execute" },
+    "plan": { "$ref": "plan.schema.json" }
+  }
+}
