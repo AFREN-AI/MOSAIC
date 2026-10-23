@@ -1,0 +1,8 @@
+add_library(mosaic_plan_cpp src/mosaic_plan.cpp)
+target_include_directories(mosaic_plan_cpp PUBLIC include ../c/include)
+target_compile_features(mosaic_plan_cpp PUBLIC cxx_std_17)
+target_link_libraries(mosaic_plan_cpp PUBLIC mosaic_plan)
+
+add_executable(test_mosaic_plan_cpp tests/test_mosaic_plan.cpp)
+target_link_libraries(test_mosaic_plan_cpp PRIVATE mosaic_plan_cpp)
+add_test(NAME mosaic_plan_cpp_contract COMMAND test_mosaic_plan_cpp)

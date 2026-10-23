@@ -57,6 +57,9 @@ The plan contract is stable enough for client libraries that construct and seria
 - Python: [`wrappers/python`](wrappers/python).
 - Go: [`wrappers/go`](wrappers/go).
 - C: [`wrappers/c`](wrappers/c), a small C11 plan serializer.
+- C++: [`wrappers/cpp`](wrappers/cpp), a C++17 builder over the C serializer.
+- Ruby: [`wrappers/ruby`](wrappers/ruby).
+- Haskell: [`wrappers/haskell`](wrappers/haskell).
 - Rust: [`wrappers/rust`](wrappers/rust).
 
 These wrappers build plan JSON; they do not invoke the .NET engine or execute tools. An application passes the serialized plan to its trusted .NET host, which owns tool registration, authorization, and execution. The shared plan schema is in [`conformance/plan.schema.json`](conformance/plan.schema.json). Plan contract compatibility is intended to follow semantic versioning from v1.0; until then, wrappers are versioned `0.1.x` alongside this early API.

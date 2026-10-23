@@ -34,6 +34,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: wrappers/go/go.mod
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - uses: haskell/actions/setup@v2
+        with:
+          ghc-version: "9.8.4"
+          cabal-version: "3.12.1.0"
       - uses: dtolnay/rust-toolchain@stable
       - name: TypeScript and JavaScript wrapper
         working-directory: wrappers/typescript
@@ -44,7 +51,13 @@ jobs:
         working-directory: wrappers/go
         run: go test ./...
       - name: C wrapper
-        run: cmake -S wrappers/c -B wrappers/c/build && cmake --build wrappers/c/build && ctest --test-dir wrappers/c/build --output-on-failure
+        run: cmake -S wrappers -B wrappers/build && cmake --build wrappers/build && ctest --test-dir wrappers/build --output-on-failure
+      - name: Ruby wrapper
+        working-directory: wrappers/ruby
+        run: ruby -Ilib test/test_mosaic_plan.rb
+      - name: Haskell wrapper
+        working-directory: wrappers/haskell
+        run: cabal test all
       - name: Rust wrapper
         working-directory: wrappers/rust
         run: cargo test
