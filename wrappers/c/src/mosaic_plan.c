@@ -4,7 +4,7 @@
 #include <string.h>
 
 static size_t escaped_length(const char *value) {
-    size_t length = 0;
+    size_t length = 2;
     for (const unsigned char *cursor = (const unsigned char *)value; *cursor; cursor++) {
         if (*cursor == '"' || *cursor == '\\') length += 2;
         else if (*cursor < 0x20) length += 6;
