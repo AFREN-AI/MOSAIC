@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Mosaic.Core;
+using Xunit;
 
 namespace Mosaic.Core.Tests;
 
