@@ -42,7 +42,8 @@ public sealed class WorkflowExecutor(ToolRegistry registry, WorkflowLimits? limi
                 throw new WorkflowRejectedException($"Required capability was not granted for tool: {step.Tool}");
             }
             var arguments = ResolveReferences(step.Arguments, results);
-            results.Add(step.Id, await tool.InvokeAsync(arguments, cancellationToken).ConfigureAwait(false));
+            var toolOutput = await tool.InvokeAsync(arguments, cancellationToken).ConfigureAwait(false);
+            results.Add(step.Id, toolOutput.Clone());
         }
 
         var output = results[plan.OutputStep];
