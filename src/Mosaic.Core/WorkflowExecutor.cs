@@ -74,7 +74,7 @@ public sealed class WorkflowExecutor(ToolRegistry registry, WorkflowLimits? limi
             {
                 throw new WorkflowRejectedException("Workflow exceeds the configured tool-call limit.");
             }
-            var toolOutput = await InvokeToolAsync(step.Tool!, step.Arguments!, null, results, grantedCapabilities, cancellationToken).ConfigureAwait(false);
+            var toolOutput = await InvokeToolAsync(step.Tool!, step.Arguments!.Value, null, results, grantedCapabilities, cancellationToken).ConfigureAwait(false);
             completedCalls++;
             results.Add(step.Id, toolOutput.Clone());
         }
