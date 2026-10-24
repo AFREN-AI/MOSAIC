@@ -84,13 +84,18 @@ builder.Services
     .WithStdioServerTransport();
 ```
 
-## GitHub Packages
+## Installation
 
-The GitHub Actions workflow publishes `AfrenAI.Mosaic` and `AfrenAI.Mosaic.Mcp` to the AFREN-AI GitHub NuGet registry on version tags. CI builds and tests the full `.slnx`, then packs both libraries. Install using the feed URL `https://nuget.pkg.github.com/AFREN-AI/index.json`; GitHub Packages requires a classic personal access token even for public NuGet packages. See [GitHub's NuGet registry guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry) for credential setup.
+Install from NuGet.org:
 
-## NuGet.org distribution
+```sh
+dotnet add package AfrenAI.Mosaic
+dotnet add package AfrenAI.Mosaic.Mcp
+```
 
-GitHub Packages remains the source of tagged releases. A separate manually dispatched workflow can publish the same libraries to NuGet.org, which permits normal public NuGet restore without GitHub credentials. Before enabling it, configure the repository secret `NUGET_API_KEY`. Then run **Publish NuGet.org packages**, supply an unused semantic version, and explicitly check the public publication confirmation. NuGet.org package IDs and published versions are permanent; the workflow does not run on tags.
+## Releases
+
+Pushing a `v*` tag (for example `v0.3.0`) runs the tests, packs `AfrenAI.Mosaic` and `AfrenAI.Mosaic.Mcp` with the version taken from the tag, and publishes them to both NuGet.org and the AFREN-AI GitHub Packages feed (`https://nuget.pkg.github.com/AFREN-AI/index.json`). NuGet.org publishing uses [Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing): the workflow exchanges a GitHub OIDC token for a short-lived API key, so no long-lived NuGet key is stored in the repository. The workflow can also be run manually with an explicit version. NuGet.org versions are permanent; they can be unlisted but not deleted.
 
 ## Progressive tool discovery
 

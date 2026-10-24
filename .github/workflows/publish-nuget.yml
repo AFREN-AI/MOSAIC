@@ -4,24 +4,58 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: Package version to publish (must be unused on NuGet.org)
+        required: true
+        type: string
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # NuGet.org Trusted Publishing exchanges the GitHub OIDC token for a short-lived API key.
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+      - name: Resolve package version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            PACKAGE_VERSION="$INPUT_VERSION"
+          fi
+          if [[ ! "$PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Version must be a semantic version, got '$PACKAGE_VERSION'." >&2
+            exit 1
+          fi
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> "$GITHUB_ENV"
       - run: dotnet restore MOSAIC.slnx
       - run: dotnet test MOSAIC.slnx --configuration Release --no-restore
-      - run: dotnet pack src/Mosaic.Core/Mosaic.Core.csproj --configuration Release --no-restore --output artifacts
-      - run: dotnet pack src/Mosaic.Mcp/Mosaic.Mcp.csproj --configuration Release --no-restore --output artifacts
+      - name: Pack libraries
+        run: |
+          dotnet pack src/Mosaic.Core/Mosaic.Core.csproj --configuration Release --no-restore --output artifacts -p:PackageVersion="$PACKAGE_VERSION"
+          dotnet pack src/Mosaic.Mcp/Mosaic.Mcp.csproj --configuration Release --no-restore --output artifacts -p:PackageVersion="$PACKAGE_VERSION"
       - name: Publish to GitHub Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: dotnet nuget push artifacts/*.nupkg --source https://nuget.pkg.github.com/AFREN-AI/index.json --api-key "$GITHUB_TOKEN" --skip-duplicate
+      - name: NuGet.org login (Trusted Publishing)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
