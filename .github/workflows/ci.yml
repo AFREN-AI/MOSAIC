@@ -1,8 +1,11 @@
 name: CI
 
+# One workflow: every run tests and packs; a v* tag also publishes the exact
+# packages that were tested, once build-test and wrapper-checks have passed.
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -13,33 +16,51 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             10.0.x
             11.0.x
+      - name: Resolve package version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            PACKAGE_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            PACKAGE_VERSION="$(dotnet msbuild src/Mosaic.Core/Mosaic.Core.csproj -getProperty:Version)"
+          fi
+          if [[ ! "$PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Version must be a semantic version, got '$PACKAGE_VERSION'." >&2
+            exit 1
+          fi
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> "$GITHUB_ENV"
       - run: dotnet restore MOSAIC.slnx
       - run: dotnet test MOSAIC.slnx --configuration Release --no-restore
       - run: dotnet run --project samples/Mosaic.Demo --configuration Release --no-restore
-      - run: dotnet pack src/Mosaic.Core/Mosaic.Core.csproj --configuration Release --no-restore --output artifacts
-      - run: dotnet pack src/Mosaic.Mcp/Mosaic.Mcp.csproj --configuration Release --no-restore --output artifacts
-      - name: Check package outputs
-        run: test -s artifacts/AfrenAI.Mosaic.1.0.0.nupkg && test -s artifacts/AfrenAI.Mosaic.Mcp.1.0.0.nupkg
+      - name: Pack libraries
+        run: |
+          dotnet pack src/Mosaic.Core/Mosaic.Core.csproj --configuration Release --no-restore --output packages -p:PackageVersion="$PACKAGE_VERSION"
+          dotnet pack src/Mosaic.Mcp/Mosaic.Mcp.csproj --configuration Release --no-restore --output packages -p:PackageVersion="$PACKAGE_VERSION"
+          test -s "packages/AfrenAI.Mosaic.$PACKAGE_VERSION.nupkg" && test -s "packages/AfrenAI.Mosaic.Mcp.$PACKAGE_VERSION.nupkg"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: packages/*.nupkg
+          if-no-files-found: error
 
   wrapper-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Container sandbox runtime syntax
         run: node --check sandbox/runner.mjs
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: wrappers/go/go.mod
       - uses: ruby/setup-ruby@v1
@@ -69,3 +90,35 @@ jobs:
       - name: Rust wrapper
         working-directory: wrappers/rust
         run: cargo test
+
+  publish:
+    needs: [build-test, wrapper-checks]
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+      # NuGet.org Trusted Publishing exchanges the GitHub OIDC token for a short-lived API key.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: packages
+          path: packages
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 11.0.x
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: dotnet nuget push "packages/*.nupkg" --source https://nuget.pkg.github.com/AFREN-AI/index.json --api-key "$GITHUB_TOKEN" --skip-duplicate
+      - name: NuGet.org login (Trusted Publishing)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push "packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
