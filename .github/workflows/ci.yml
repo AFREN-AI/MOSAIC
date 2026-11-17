@@ -25,7 +25,7 @@ jobs:
       - run: dotnet pack src/Mosaic.Core/Mosaic.Core.csproj --configuration Release --no-restore --output artifacts
       - run: dotnet pack src/Mosaic.Mcp/Mosaic.Mcp.csproj --configuration Release --no-restore --output artifacts
       - name: Check package outputs
-        run: test -s artifacts/AfrenAI.Mosaic.0.4.0.nupkg && test -s artifacts/AfrenAI.Mosaic.Mcp.0.4.0.nupkg
+        run: test -s artifacts/AfrenAI.Mosaic.1.0.0.nupkg && test -s artifacts/AfrenAI.Mosaic.Mcp.1.0.0.nupkg
 
   wrapper-checks:
     runs-on: ubuntu-latest

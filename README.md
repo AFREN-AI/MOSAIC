@@ -95,7 +95,7 @@ dotnet add package AfrenAI.Mosaic.Mcp
 
 ## Releases
 
-Pushing a `v*` tag (for example `v0.3.0`) runs the tests, packs `AfrenAI.Mosaic` and `AfrenAI.Mosaic.Mcp` with the version taken from the tag, and publishes them to both NuGet.org and the AFREN-AI GitHub Packages feed (`https://nuget.pkg.github.com/AFREN-AI/index.json`). NuGet.org publishing uses [Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing): the workflow exchanges a GitHub OIDC token for a short-lived API key, so no long-lived NuGet key is stored in the repository. The workflow can also be run manually with an explicit version. NuGet.org versions are permanent; they can be unlisted but not deleted.
+Pushing a `v*` tag (for example `v1.0.0`) runs the tests, packs `AfrenAI.Mosaic` and `AfrenAI.Mosaic.Mcp` with the version taken from the tag, and publishes them to both NuGet.org and the AFREN-AI GitHub Packages feed (`https://nuget.pkg.github.com/AFREN-AI/index.json`). NuGet.org publishing uses [Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing): the workflow exchanges a GitHub OIDC token for a short-lived API key, so no long-lived NuGet key is stored in the repository. The workflow can also be run manually with an explicit version. NuGet.org versions are permanent; they can be unlisted but not deleted.
 
 ## Progressive tool discovery
 
