@@ -25,7 +25,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            10.0.x
+            11.0.x
       - name: Resolve package version
         env:
           INPUT_VERSION: ${{ inputs.version }}
