@@ -16,7 +16,7 @@ MOSAIC is an early reference implementation. Its v0.1 plan contract is shared by
 
 ## Quick start
 
-Requirements: .NET 10 SDK. No SDK is installed by this project. CI uses GitHub hosted runners.
+Requirements: .NET 10 or .NET 11. The NuGet packages target both `net10.0` (LTS) and `net11.0`. Building the full solution, including tests on both frameworks, needs the .NET 11 SDK plus the .NET 10 runtime. No SDK is installed by this project. CI uses GitHub hosted runners.
 
 ```csharp
 var readCapability = new Capability("catalog.read");
